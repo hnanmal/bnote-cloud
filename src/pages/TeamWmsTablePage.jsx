@@ -37,22 +37,18 @@ export default function TeamWmsTablePage() {
 
   const Row = ({ index, style }) => (
     <div
-      style={{
-        ...style,
-        display: "flex",
-        width: totalWidth,
-      }}
-      className="border-b text-sm even:bg-gray-50"
+      className="flex border-b text-sm even:bg-gray-50"
+      style={{ ...style, width: totalWidth }}
     >
       {columns.map((col, i) => (
         <div
           key={i}
+          className="px-2 py-1 border-r truncate whitespace-nowrap overflow-hidden"
           style={{
             width: columnWidth,
             minWidth: columnWidth,
             maxWidth: columnWidth,
           }}
-          className="px-2 py-1 border-r truncate whitespace-nowrap overflow-hidden"
         >
           {rows[index][col]}
         </div>
@@ -81,29 +77,30 @@ export default function TeamWmsTablePage() {
       {error && <p className="text-red-600">{error}</p>}
 
       {!loading && rows.length > 0 && (
-        <div
-          className="border rounded overflow-x-auto"
-          style={{ maxWidth: "100%" }}
-        >
+        <div className="border rounded overflow-x-auto" style={{ maxWidth: "100%" }}>
+          {/* 가로폭 강제 고정 */}
           <div style={{ width: totalWidth }}>
             {/* 헤더 */}
-            <div className="flex bg-gray-100 sticky top-0 z-10 border-b text-xs font-semibold">
+            <div
+              className="flex sticky top-0 z-10 bg-gray-100 text-xs font-semibold border-b"
+              style={{ width: totalWidth }}
+            >
               {columns.map((col, i) => (
                 <div
                   key={i}
+                  className="px-2 py-1 border-r truncate whitespace-nowrap overflow-hidden"
                   style={{
                     width: columnWidth,
                     minWidth: columnWidth,
                     maxWidth: columnWidth,
                   }}
-                  className="px-2 py-1 border-r truncate whitespace-nowrap overflow-hidden"
                 >
                   {col}
                 </div>
               ))}
             </div>
 
-            {/* 바디 */}
+            {/* 리스트 본문 */}
             <List
               height={listHeight}
               itemCount={rows.length}
