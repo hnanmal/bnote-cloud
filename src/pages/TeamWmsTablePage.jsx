@@ -1,17 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef } from "react";
 import axios from "axios";
 import { FixedSizeList as List } from "react-window";
+
+const columnWidth = 160;
+const rowHeight = 35;
+const listHeight = 600;
+
+// 가로 스크롤 제거, 세로만 유지
+const OuterElement = forwardRef(({ style, ...rest }, ref) => (
+  <div
+    ref={ref}
+    {...rest}
+    style={{
+      ...style,
+      overflowX: "hidden",
+      overflowY: "auto",
+    }}
+  />
+));
 
 export default function TeamWmsTablePage() {
   const [type, setType] = useState("AR");
   const [rows, setRows] = useState([]);
   const [columns, setColumns] = useState([]);
+  const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const columnWidth = 160;
-  const rowHeight = 35;
-  const listHeight = 600;
 
   const fetchData = async (wmsType) => {
     setLoading(true);
@@ -33,6 +47,12 @@ export default function TeamWmsTablePage() {
     fetchData(type);
   }, [type]);
 
+  const filteredRows = filter
+    ? rows.filter((r) =>
+        r[columns[1]]?.toLowerCase().includes(filter.toLowerCase())
+      )
+    : rows;
+
   const totalWidth = columns.length * columnWidth;
 
   const Row = ({ index, style }) => (
@@ -43,14 +63,16 @@ export default function TeamWmsTablePage() {
       {columns.map((col, i) => (
         <div
           key={i}
-          className="px-2 py-1 border-r truncate whitespace-nowrap overflow-hidden"
+          className={`px-2 py-1 border-r truncate whitespace-nowrap overflow-hidden ${
+            i === 0 ? "bg-white sticky left-0 z-10" : ""
+          }`}
           style={{
             width: columnWidth,
             minWidth: columnWidth,
             maxWidth: columnWidth,
           }}
         >
-          {rows[index][col]}
+          {filteredRows[index][col]}
         </div>
       ))}
     </div>
@@ -60,8 +82,8 @@ export default function TeamWmsTablePage() {
     <div className="p-6 space-y-4">
       <h2 className="text-xl font-bold">📋 팀 표준 WMS 테이블</h2>
 
-      <div>
-        <label className="font-semibold mr-2">WMS 분류 선택:</label>
+      <div className="flex items-center gap-4">
+        <label className="font-semibold">WMS 분류:</label>
         <select
           className="border px-2 py-1 rounded"
           value={type}
@@ -71,24 +93,32 @@ export default function TeamWmsTablePage() {
           <option value="SS">SS (구조)</option>
           <option value="FP">FP (소방)</option>
         </select>
+
+        <input
+          placeholder="🔍 필터 (작업명 등)"
+          className="border px-2 py-1 rounded"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
       </div>
 
       {loading && <p>🔄 로딩 중...</p>}
       {error && <p className="text-red-600">{error}</p>}
 
-      {!loading && rows.length > 0 && (
+      {!loading && filteredRows.length > 0 && (
         <div className="border rounded overflow-x-auto" style={{ maxWidth: "100%" }}>
-          {/* 가로폭 강제 고정 */}
           <div style={{ width: totalWidth }}>
             {/* 헤더 */}
             <div
-              className="flex sticky top-0 z-10 bg-gray-100 text-xs font-semibold border-b"
+              className="flex sticky top-0 z-20 bg-gray-100 text-xs font-semibold border-b"
               style={{ width: totalWidth }}
             >
               {columns.map((col, i) => (
                 <div
                   key={i}
-                  className="px-2 py-1 border-r truncate whitespace-nowrap overflow-hidden"
+                  className={`px-2 py-1 border-r truncate whitespace-nowrap overflow-hidden ${
+                    i === 0 ? "bg-gray-100 sticky left-0 z-20" : ""
+                  }`}
                   style={{
                     width: columnWidth,
                     minWidth: columnWidth,
@@ -100,12 +130,13 @@ export default function TeamWmsTablePage() {
               ))}
             </div>
 
-            {/* 리스트 본문 */}
+            {/* 본문 */}
             <List
-              height={listHeight}
-              itemCount={rows.length}
+              height={listHeight - rowHeight}
+              itemCount={filteredRows.length}
               itemSize={rowHeight}
               width={totalWidth}
+              outerElementType={OuterElement}
             >
               {Row}
             </List>
